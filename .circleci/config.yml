@@ -7,6 +7,14 @@ jobs:
     steps:
       - checkout  # Check out the repository
       - run:
+          name: "Create Shortened Build Tag"
+          command: |
+            # Convert the current SHA (CIRCLE_SHA1) to a shortened build tag
+            export BUILD_TAG="${CIRCLE_SHA1:0:7}"
+            echo "export BUILD_TAG=$BUILD_TAG" >> $BASH_ENV
+            printf "${BUILD_TAG}" > build_tag.txt
+            echo "Build Tag: $BUILD_TAG"
+      - run:
           name: "Add SSH Host to Known Hosts"
           command: |
             mkdir -p ~/.ssh
@@ -36,6 +44,19 @@ jobs:
             # Retrieve the SHA of the merged branch
             MERGED_BRANCH_SHA=$(git rev-parse origin/$MERGED_BRANCH)
             echo "SHA of Merged Branch: $MERGED_BRANCH_SHA"
+
+            # Save the SHA to a file for later use
+            echo $MERGED_SHA > merged_sha.txt
+
+            # Read the SHA from the saved file
+            PROMOTION_SHA=$(cat merged_sha.txt)
+            echo "Promoting Image for SHA: $PROMOTION_SHA"
+
+            export BUILD_TAG="${PROMOTION_SHA:0:7}"
+            echo "Build Tag: $BUILD_TAG"
+
+            
+
 
 workflows:
   version: 2
