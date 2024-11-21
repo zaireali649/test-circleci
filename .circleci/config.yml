@@ -41,18 +41,9 @@ jobs:
             MERGED_BRANCH=$(git branch -r --contains $SECOND_PARENT | grep -o 'origin/.*' | sed 's|origin/||' | head -n 1)
             echo "Merged Branch: $MERGED_BRANCH"
 
-            # Retrieve the SHA of the merged branch
-            MERGED_BRANCH_SHA=$(git rev-parse origin/$MERGED_BRANCH)
-            echo "SHA of Merged Branch: $MERGED_BRANCH_SHA"
+            echo "Promoting Image for SHA: $SECOND_PARENT"
 
-            # Save the SHA to a file for later use
-            echo $MERGED_BRANCH_SHA > merged_sha.txt
-
-            # Read the SHA from the saved file
-            PROMOTION_SHA=$(cat merged_sha.txt)
-            echo "Promoting Image for SHA: $PROMOTION_SHA"
-
-            export BUILD_TAG="${PROMOTION_SHA:0:7}"
+            export BUILD_TAG="${SECOND_PARENT:0:7}"
             echo "Build Tag: $BUILD_TAG"
 
             
