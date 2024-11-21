@@ -15,36 +15,15 @@ jobs:
             printf "${BUILD_TAG}" > build_tag.txt
             echo "Build Tag: $BUILD_TAG"
       - run:
-          name: "Add SSH Host to Known Hosts"
+          name: "Fetch Remote Branches"
           command: |
             mkdir -p ~/.ssh
             ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-      - run:
-          name: "Fetch Remote Branches"
-          command: git fetch --all
-      - run:
-          name: "Identify Merged Branch and SHA"
-          command: |
-            # Get the merge commit SHA (replace this with a dummy SHA if testing manually)
-            MERGE_COMMIT_SHA=$(git log --merges -n 1 --pretty=format:"%H")
-            echo "Merge Commit SHA: $MERGE_COMMIT_SHA"
-
-            # Get parent commits of the merge commit
-            PARENTS=$(git log -n 1 --pretty=%P $MERGE_COMMIT_SHA)
-            FIRST_PARENT=$(echo $PARENTS | awk '{print $1}')
-            SECOND_PARENT=$(echo $PARENTS | awk '{print $2}')
-
-            echo "First Parent (Target Branch): $FIRST_PARENT"
-            echo "Second Parent (Source Branch): $SECOND_PARENT"
-
-            # Find the branch associated with the second parent
-            MERGED_BRANCH=$(git branch -r --contains $SECOND_PARENT | grep -o 'origin/.*' | sed 's|origin/||' | head -n 1)
-            echo "Merged Branch: $MERGED_BRANCH"
-
-            echo "Promoting Image for SHA: $SECOND_PARENT"
-
+            git fetch --all
+            SECOND_PARENT=$(git log -n 1 --pretty=%P $(git log --merges -n 1 --pretty=%H) | awk '{print $2}')
             export EXTRACTED_BUILD_TAG="${SECOND_PARENT:0:7}"
             echo "Extracted Build Tag: $EXTRACTED_BUILD_TAG"
+      
 
             
 
