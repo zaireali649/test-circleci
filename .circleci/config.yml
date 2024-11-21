@@ -46,7 +46,7 @@ jobs:
             echo "SHA of Merged Branch: $MERGED_BRANCH_SHA"
 
             # Save the SHA to a file for later use
-            echo $MERGED_SHA > merged_sha.txt
+            echo $MERGED_BRANCH_SHA > merged_sha.txt
 
             # Read the SHA from the saved file
             PROMOTION_SHA=$(cat merged_sha.txt)
