@@ -43,8 +43,8 @@ jobs:
 
             echo "Promoting Image for SHA: $SECOND_PARENT"
 
-            export BUILD_TAG="${SECOND_PARENT:0:7}"
-            echo "Build Tag: $BUILD_TAG"
+            export EXTRACTED_BUILD_TAG="${SECOND_PARENT:0:7}"
+            echo "Extracted Build Tag: $EXTRACTED_BUILD_TAG"
 
             
 
