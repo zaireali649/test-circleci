@@ -1,0 +1,65 @@
+version: 2.1
+
+jobs:
+  extract_sha:
+    docker:
+      - image: cimg/base:stable  # Base image with Git pre-installed
+    steps:
+      - checkout  # Check out the repository
+      - run:
+          name: "Create Shortened Build Tag"
+          command: |
+            # Convert the current SHA (CIRCLE_SHA1) to a shortened build tag
+            export BUILD_TAG="${CIRCLE_SHA1:0:7}"
+            echo "export BUILD_TAG=$BUILD_TAG" >> $BASH_ENV
+            printf "${BUILD_TAG}" > build_tag.txt
+            echo "Build Tag: $BUILD_TAG"
+      - run:
+          name: "Add SSH Host to Known Hosts"
+          command: |
+            mkdir -p ~/.ssh
+            ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+      - run:
+          name: "Fetch Remote Branches"
+          command: git fetch --all
+      - run:
+          name: "Identify Merged Branch and SHA"
+          command: |
+            # Get the merge commit SHA (replace this with a dummy SHA if testing manually)
+            MERGE_COMMIT_SHA=$(git log --merges -n 1 --pretty=format:"%H")
+            echo "Merge Commit SHA: $MERGE_COMMIT_SHA"
+
+            # Get parent commits of the merge commit
+            PARENTS=$(git log -n 1 --pretty=%P $MERGE_COMMIT_SHA)
+            FIRST_PARENT=$(echo $PARENTS | awk '{print $1}')
+            SECOND_PARENT=$(echo $PARENTS | awk '{print $2}')
+
+            echo "First Parent (Target Branch): $FIRST_PARENT"
+            echo "Second Parent (Source Branch): $SECOND_PARENT"
+
+            # Find the branch associated with the second parent
+            MERGED_BRANCH=$(git branch -r --contains $SECOND_PARENT | grep -o 'origin/.*' | sed 's|origin/||' | head -n 1)
+            echo "Merged Branch: $MERGED_BRANCH"
+
+            # Retrieve the SHA of the merged branch
+            MERGED_BRANCH_SHA=$(git rev-parse origin/$MERGED_BRANCH)
+            echo "SHA of Merged Branch: $MERGED_BRANCH_SHA"
+
+            # Save the SHA to a file for later use
+            echo $MERGED_BRANCH_SHA > merged_sha.txt
+
+            # Read the SHA from the saved file
+            PROMOTION_SHA=$(cat merged_sha.txt)
+            echo "Promoting Image for SHA: $PROMOTION_SHA"
+
+            export BUILD_TAG="${PROMOTION_SHA:0:7}"
+            echo "Build Tag: $BUILD_TAG"
+
+            
+
+
+workflows:
+  version: 2
+  test_workflow:
+    jobs:
+      - extract_sha
